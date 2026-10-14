@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿using System;
 using Project_OOP;
 using Project_OOP.AProduct;
