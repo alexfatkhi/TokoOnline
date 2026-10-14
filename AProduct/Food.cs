@@ -1,37 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP.AProduct
 {
     public class Food : Product
     {
-        public DateTime ExpiryDate { get; }
+        // Days left until the product expires. 0 or less means expired.
+        public int DaysUntilExpired { get; }
 
         public Food(
             string code,
-            string productName,
+            string name,
             decimal price,
             int stock,
-            DateTime expiryDate
-        ) : base(code, productName, price, stock)
+            int daysUntilExpired
+        ) : base(code, name, price, stock)
         {
-            ExpiryDate = expiryDate;
+            DaysUntilExpired = daysUntilExpired;
         }
 
-        public override decimal FinalPrice()
+        public override string GetCategory()
+        {
+            return "Food";
+        }
+
+        // Food has no promo or warranty; the final price is the normal price.
+        public override decimal GetFinalPrice()
         {
             return Price;
         }
 
-        public bool CanBePurchased()
-        {
-            return DateTime.Today <= ExpiryDate;
-        }
-
-        public override bool CanBeReturned(int daysSincePurchase)
+        // Food can never be returned.
+        public override bool CanBeReturned()
         {
             return false;
+        }
+
+        public bool IsExpired()
+        {
+            return DaysUntilExpired <= 0;
         }
     }
 }

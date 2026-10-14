@@ -1,38 +1,52 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP.AProduct
 {
     public class Outfit : Product
     {
-        public bool IsPromo { get; }
+        public decimal DiscountRate { get; } // e.g. 0.20 = 20% off
+        public bool IsOnPromo { get; }
 
         public Outfit(
             string code,
-            string productName,
+            string name,
             decimal price,
             int stock,
-            bool isPromo
-        ) : base(code, productName, price, stock)
+            bool isOnPromo,
+            decimal discountRate = 0.20m
+        ) : base(code, name, price, stock)
         {
-            IsPromo = isPromo;
+            if (discountRate < 0 || discountRate > 1)
+            {
+                throw new ArgumentException(
+                    $"Validation: discount rate of '{name}' must be between 0 and 1."
+                );
+            }
+
+            IsOnPromo = isOnPromo;
+            DiscountRate = discountRate;
         }
 
-        public override decimal FinalPrice()
+        public override string GetCategory()
         {
-            if (IsPromo)
+            return "Outfit";
+        }
+
+        // Apply the discount only while the promo is active.
+        public override decimal GetFinalPrice()
+        {
+            if (IsOnPromo)
             {
-                return Price * 0.8m;
+                return Price * (1 - DiscountRate);
             }
 
             return Price;
         }
 
-        public override bool CanBeReturned(int daysSincePurchase)
+        // Outfits can be returned (the 7-day window is checked by Customer).
+        public override bool CanBeReturned()
         {
-            return daysSincePurchase >= 0
-                && daysSincePurchase <= 7;
+            return true;
         }
     }
 }

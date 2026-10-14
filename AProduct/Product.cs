@@ -1,49 +1,77 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP.AProduct
 {
+    // Abstract parent for every product category (Electronic, Outfit, Food).
     public abstract class Product
     {
-        public string Code { get; }
-        public string ProductName { get; }
-        public decimal Price { get; }
-        public int Stock { get; private set; }
+        public string Code { get; }          // immutable product code
+        public string Name { get; }
+        public decimal Price { get; }         // normal price, must be > 0
+        public int Stock { get; private set; } // must never be negative
 
-        protected Product( string code, string productName, decimal price, int stock)
+        // Protected constructor: only subclasses can build a Product.
+        // Validation here produces the "harga 0 / stok negatif" messages.
+        protected Product(string code, string name, decimal price, int stock)
         {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                throw new ArgumentException("Validation: product code cannot be empty.");
+            }
+
+            if (price <= 0)
+            {
+                throw new ArgumentException(
+                    $"Validation: price of '{name}' must be greater than 0 (got {price})."
+                );
+            }
+
+            if (stock < 0)
+            {
+                throw new ArgumentException(
+                    $"Validation: stock of '{name}' cannot be negative (got {stock})."
+                );
+            }
+
             Code = code;
-            ProductName = productName;
+            Name = name;
             Price = price;
             Stock = stock;
         }
 
-        public abstract decimal FinalPrice();
+        // Overridden by each category.
+        public abstract string GetCategory();
+        public abstract decimal GetFinalPrice();
+        public abstract bool CanBeReturned();
 
-        public abstract bool CanBeReturned(int daysSincePurchase);
-
-        public bool ReduceStock(int quantity)
+        // Reduce stock on checkout. Invalid amounts are ignored.
+        public void ReduceStock(int qty)
         {
-            if (quantity <= 0 || quantity > Stock)
+            if (qty <= 0 || qty > Stock)
             {
-                return false;
+                return;
             }
 
-            Stock -= quantity;
-            return true;
+            Stock -= qty;
         }
 
-        public bool RestoreStock(int quantity)
+        // Restore stock on a successful return.
+        public void RestoreStock(int qty)
         {
-            if (quantity <= 0)
+            if (qty <= 0)
             {
-                return false;
+                return;
             }
 
-            Stock += quantity;
-            return true;
+            Stock += qty;
+        }
+
+        // Single-line catalog entry: code, name, category, normal + final price, stock.
+        public string GetCatalogInfo()
+        {
+            return $"{Code} | {Name} | {GetCategory()} | " +
+                   $"Normal: Rp{Price:N0} | Final: Rp{GetFinalPrice():N0} | " +
+                   $"Stock: {Stock}";
         }
     }
 }
-

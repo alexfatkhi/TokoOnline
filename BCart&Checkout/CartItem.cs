@@ -1,10 +1,8 @@
 ﻿using Project_OOP.AProduct;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP
 {
+    // One line in the cart: a product plus the quantity ordered.
     public class CartItem
     {
         public Product Product { get; }
@@ -16,9 +14,12 @@ namespace Project_OOP
             Quantity = quantity;
         }
 
-        public decimal Subtotal()
+        public string ProductName => Product.Name;
+
+        // Subtotal = final price (after promo / warranty) x quantity.
+        public decimal GetSubTotal()
         {
-            return Product.FinalPrice() * Quantity;
+            return Product.GetFinalPrice() * Quantity;
         }
 
         public bool UpdateQuantity(int quantity)

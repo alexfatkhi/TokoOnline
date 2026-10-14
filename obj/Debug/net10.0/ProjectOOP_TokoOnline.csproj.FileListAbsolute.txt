@@ -1,0 +1,15 @@
+/Users/alex/Downloads/TokoOnline/TokoOnline/bin/Debug/net10.0/ProjectOOP_TokoOnline
+/Users/alex/Downloads/TokoOnline/TokoOnline/bin/Debug/net10.0/ProjectOOP_TokoOnline.deps.json
+/Users/alex/Downloads/TokoOnline/TokoOnline/bin/Debug/net10.0/ProjectOOP_TokoOnline.runtimeconfig.json
+/Users/alex/Downloads/TokoOnline/TokoOnline/bin/Debug/net10.0/ProjectOOP_TokoOnline.dll
+/Users/alex/Downloads/TokoOnline/TokoOnline/bin/Debug/net10.0/ProjectOOP_TokoOnline.pdb
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.GeneratedMSBuildEditorConfig.editorconfig
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.AssemblyInfoInputs.cache
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.AssemblyInfo.cs
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.csproj.CoreCompileInputs.cache
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.sourcelink.json
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.dll
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/refint/ProjectOOP_TokoOnline.dll
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.pdb
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ProjectOOP_TokoOnline.genruntimeconfig.cache
+/Users/alex/Downloads/TokoOnline/TokoOnline/obj/Debug/net10.0/ref/ProjectOOP_TokoOnline.dll

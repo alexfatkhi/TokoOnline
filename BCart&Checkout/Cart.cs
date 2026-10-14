@@ -1,16 +1,18 @@
 ﻿using Project_OOP.AProduct;
-using ProjectOOP_TokoOnline;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP
 {
     public class Cart
     {
-        private CartItem?[] items = new CartItem?[10];
+        public const int MAX_ITEMS = 10;
+
+        private readonly CartItem?[] items = new CartItem?[MAX_ITEMS];
         private int itemCount = 0;
 
+        // Add a product to the cart, or return false with the reason handled by the caller:
+        // null product, bad quantity, quantity over stock, expired food, or cart full.
         public bool AddItem(Product product, int quantity)
         {
             if (product == null ||
@@ -20,11 +22,12 @@ namespace Project_OOP
                 return false;
             }
 
-            if (product is Food food && !food.CanBePurchased())
+            if (product is Food food && food.IsExpired())
             {
                 return false;
             }
 
+            // If the product is already in the cart, merge the quantities.
             for (int i = 0; i < itemCount; i++)
             {
                 CartItem? currentItem = items[i];
@@ -54,7 +57,7 @@ namespace Project_OOP
             return true;
         }
 
-        public decimal CalculateTotal()
+        public decimal GetTotal()
         {
             decimal total = 0m;
 
@@ -64,26 +67,39 @@ namespace Project_OOP
 
                 if (item != null)
                 {
-                    total += item.Subtotal();
+                    total += item.GetSubTotal();
                 }
             }
 
             return total;
         }
 
-        public decimal CalculateShipping(decimal subtotal)
+        public bool IsEmpty()
         {
-            if (subtotal >= 250000m)
-            {
-                return 0m;
-            }
-
-            return 15000m;
+            return itemCount == 0;
         }
 
-        public void ShowItems()
+        // Snapshot of the active cart lines, used by Customer.Checkout.
+        public List<CartItem> GetItems()
         {
-            if (itemCount == 0)
+            List<CartItem> result = new List<CartItem>();
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                CartItem? item = items[i];
+
+                if (item != null)
+                {
+                    result.Add(item);
+                }
+            }
+
+            return result;
+        }
+
+        public void PrintContents()
+        {
+            if (IsEmpty())
             {
                 Console.WriteLine("Your cart is empty.");
                 return;
@@ -98,84 +114,20 @@ namespace Project_OOP
                 if (item != null)
                 {
                     Console.WriteLine(
-                        $"{i + 1}. {item.Product.ProductName} " +
-                        $"x {item.Quantity} = Rp{item.Subtotal():N0}"
+                        $"{i + 1}. {item.ProductName} " +
+                        $"x {item.Quantity} = Rp{item.GetSubTotal():N0}"
                     );
                 }
             }
 
-            Console.WriteLine($"Subtotal: Rp{CalculateTotal():N0}");
+            Console.WriteLine($"Running total: Rp{GetTotal():N0}");
         }
 
-        public Transaction? Checkout(Customer customer)
+        // Empty the cart after a successful checkout.
+        public void Clear()
         {
-            if (itemCount == 0)
-            {
-                Console.WriteLine("Your cart is empty.");
-                return null;
-            }
-
-            // Validate all items before changing stock
-            for (int i = 0; i < itemCount; i++)
-            {
-                CartItem? item = items[i];
-
-                if (item == null ||
-                    item.Quantity <= 0 ||
-                    item.Quantity > item.Product.Stock)
-                {
-                    Console.WriteLine("Invalid item or insufficient stock.");
-                    return null;
-                }
-
-                if (item.Product is Food food &&
-                    !food.CanBePurchased())
-                {
-                    Console.WriteLine("A food product has expired.");
-                    return null;
-                }
-            }
-
-            decimal subtotal = CalculateTotal();
-            decimal shippingCost = CalculateShipping(subtotal);
-            int pointsEarned = 0;
-
-            if (customer is Member memberForPoints)
-            {
-                pointsEarned = memberForPoints.HitungPoin(subtotal);
-            }
-
-            // Reduce stock after all validations succeed
-            for (int i = 0; i < itemCount; i++)
-            {
-                CartItem? item = items[i];
-
-                if (item != null)
-                {
-                    item.Product.ReduceStock(item.Quantity);
-                }
-            }
-
-            // Create a record of the completed purchase
-            Transaction transaction = new Transaction(
-                customer,
-                items,
-                itemCount,
-                shippingCost,
-                pointsEarned
-            );
-
-            // Award points only after successful checkout
-            if (customer is Member memberToReward)
-            {
-                memberToReward.TambahPoin(subtotal);
-            }
-
-            // Empty the cart after checkout
             Array.Clear(items, 0, items.Length);
             itemCount = 0;
-
-            return transaction;
         }
     }
 }

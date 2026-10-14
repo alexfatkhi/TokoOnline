@@ -1,22 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
 using Project_OOP;
 using Project_OOP.AProduct;
 
 namespace ProjectOOP_TokoOnline
 {
+    // Console UI layer that wires the user to the domain classes.
     public class Menu
     {
-        private Member[] registeredMembers;
-        private Product[] catalog;
+        // One completed purchase line, kept so it can be returned later.
+        private class PurchaseRecord
+        {
+            public Product Product { get; }
+            public int Quantity { get; }
+            public bool Returned { get; set; }
 
-        private Cart cart = new Cart();
+            public PurchaseRecord(Product product, int quantity)
+            {
+                Product = product;
+                Quantity = quantity;
+            }
+        }
 
-        private Transaction?[] transactionHistory =
-            new Transaction?[10];
+        private readonly Member[] registeredMembers;
+        private readonly Product[] catalog;
 
-        public Menu(
-            Member[] registeredMembers,
-            Product[] catalog)
+        private readonly Cart cart = new Cart();
+        private readonly List<PurchaseRecord> purchases = new List<PurchaseRecord>();
+
+        public Menu(Member[] registeredMembers, Product[] catalog)
         {
             this.registeredMembers = registeredMembers;
             this.catalog = catalog;
@@ -54,7 +66,7 @@ namespace ProjectOOP_TokoOnline
                         break;
 
                     case 3:
-                        cart.ShowItems();
+                        cart.PrintContents();
                         break;
 
                     case 4:
@@ -62,7 +74,7 @@ namespace ProjectOOP_TokoOnline
                         break;
 
                     case 5:
-                        ReturnProduct();
+                        ReturnProduct(currentCustomer);
                         break;
 
                     case 6:
@@ -139,20 +151,14 @@ namespace ProjectOOP_TokoOnline
             {
                 Product product = catalog[i];
 
-                Console.WriteLine(
-                    $"{product.Code} | {product.ProductName} | " +
-                    $"Price: Rp{product.FinalPrice():N0} | " +
-                    $"Stock: {product.Stock}"
-                );
+                Console.WriteLine(product.GetCatalogInfo());
 
                 if (product is Food food)
                 {
-                    Console.WriteLine($"Expiry Date: {food.ExpiryDate:d}");
-
-                    if (!food.CanBePurchased())
-                    {
-                        Console.WriteLine("Status: Expired");
-                    }
+                    Console.WriteLine(
+                        $"    Days until expired: {food.DaysUntilExpired}" +
+                        (food.IsExpired() ? " (Expired)" : "")
+                    );
                 }
             }
         }
@@ -162,18 +168,7 @@ namespace ProjectOOP_TokoOnline
             Console.Write("Enter product code: ");
             string code = (Console.ReadLine() ?? "").Trim();
 
-            Product? selectedProduct = null;
-
-            for (int i = 0; i < catalog.Length; i++)
-            {
-                if (catalog[i].Code.Equals(
-                    code,
-                    StringComparison.OrdinalIgnoreCase))
-                {
-                    selectedProduct = catalog[i];
-                    break;
-                }
-            }
+            Product? selectedProduct = FindProduct(code);
 
             if (selectedProduct == null)
             {
@@ -196,141 +191,122 @@ namespace ProjectOOP_TokoOnline
             else
             {
                 Console.WriteLine(
-                    "Cannot add product. Check stock, quantity, " +
-                    "expiration date, or cart capacity."
+                    "Cannot add product. Reason: insufficient stock, " +
+                    "invalid quantity, expired food, or cart is full."
                 );
             }
         }
 
         private void Checkout(Customer customer)
         {
-            int emptyIndex = -1;
-
-            for (int i = 0; i < transactionHistory.Length; i++)
+            if (cart.IsEmpty())
             {
-                if (transactionHistory[i] == null)
-                {
-                    emptyIndex = i;
-                    break;
-                }
-            }
-
-            if (emptyIndex == -1)
-            {
-                Console.WriteLine("Transaction history is full.");
+                Console.WriteLine("Your cart is empty.");
                 return;
             }
 
-            Transaction? transaction = cart.Checkout(customer);
-
-            if (transaction == null)
+            // Remember the purchased lines (for returns) before the cart is cleared.
+            foreach (CartItem line in cart.GetItems())
             {
-                Console.WriteLine("Checkout failed.");
-                return;
+                purchases.Add(new PurchaseRecord(line.Product, line.Quantity));
             }
-
-            transactionHistory[emptyIndex] = transaction;
-
-            Console.WriteLine("Checkout successful!");
-            transaction.PrintReceipt();
-
-            if (customer is Member member)
-            {
-                Console.WriteLine($"Your current points: {member.Point}");
-            }
-        }
-
-        private void ReturnProduct()
-        {
-            bool hasTransaction = false;
 
             Console.WriteLine();
-            Console.WriteLine("===== TRANSACTION HISTORY =====");
+            customer.Checkout(cart);
+        }
 
-            for (int i = 0; i < transactionHistory.Length; i++)
+        private void ReturnProduct(Customer customer)
+        {
+            Console.WriteLine();
+            Console.WriteLine("===== PURCHASED ITEMS =====");
+
+            bool hasReturnable = false;
+
+            for (int i = 0; i < purchases.Count; i++)
             {
-                Transaction? transaction = transactionHistory[i];
+                PurchaseRecord record = purchases[i];
+                string status = record.Returned ? " (Returned)" : "";
 
-                if (transaction != null)
+                Console.WriteLine(
+                    $"{i + 1}. {record.Product.Name} x {record.Quantity} " +
+                    $"[{record.Product.GetCategory()}]{status}"
+                );
+
+                if (!record.Returned)
                 {
-                    hasTransaction = true;
-
-                    Console.WriteLine(
-                        $"{i + 1}. {transaction.Customer.CustomerName} | " +
-                        $"{transaction.PurchaseDate:d} | " +
-                        $"Rp{transaction.TotalPayment:N0}"
-                    );
+                    hasReturnable = true;
                 }
             }
 
-            if (!hasTransaction)
+            if (!hasReturnable)
             {
-                Console.WriteLine("No completed transactions.");
+                Console.WriteLine("No items available to return.");
                 return;
             }
 
-            Console.Write("Choose transaction number: ");
+            Console.Write("Choose item number to return: ");
 
-            if (!int.TryParse(
-                Console.ReadLine(),
-                out int transactionNumber))
-            {
-                Console.WriteLine("Invalid transaction number.");
-                return;
-            }
-
-            if (transactionNumber < 1 ||
-                transactionNumber > transactionHistory.Length)
-            {
-                Console.WriteLine("Transaction not found.");
-                return;
-            }
-
-            Transaction? transactionToReturn =
-                transactionHistory[transactionNumber - 1];
-
-            if (transactionToReturn == null)
-            {
-                Console.WriteLine("Transaction not found.");
-                return;
-            }
-
-            transactionToReturn.PrintReceipt();
-
-            Console.Write("Enter item number to return: ");
-
-            if (!int.TryParse(
-                Console.ReadLine(),
-                out int itemNumber))
+            if (!int.TryParse(Console.ReadLine(), out int itemNumber) ||
+                itemNumber < 1 ||
+                itemNumber > purchases.Count)
             {
                 Console.WriteLine("Invalid item number.");
                 return;
             }
 
-            if (itemNumber < 1 ||
-                itemNumber > transactionToReturn.ItemCount)
+            PurchaseRecord selected = purchases[itemNumber - 1];
+
+            if (selected.Returned)
             {
-                Console.WriteLine("Item not found.");
+                Console.WriteLine("This item has already been returned.");
                 return;
             }
 
-            int itemIndex = itemNumber - 1;
+            Console.Write("Days since purchase: ");
 
-            if (transactionToReturn.ProcessReturn(itemIndex))
+            if (!int.TryParse(Console.ReadLine(), out int days))
             {
+                Console.WriteLine("Please enter a valid number of days.");
+                return;
+            }
+
+            if (customer.ReturnProduct(selected.Product, days))
+            {
+                // Return approved: restore stock and refund the money.
+                selected.Product.RestoreStock(selected.Quantity);
+                selected.Returned = true;
+
                 decimal refund =
-                    transactionToReturn.GetRefundAmount(itemIndex);
+                    selected.Product.GetFinalPrice() * selected.Quantity;
 
                 Console.WriteLine("Return successful.");
                 Console.WriteLine($"Refund: Rp{refund:N0}");
+                Console.WriteLine(
+                    $"Stock of {selected.Product.Name} is now {selected.Product.Stock}."
+                );
             }
             else
             {
                 Console.WriteLine(
-                    "Return failed. Check the return policy " +
-                    "or whether the item was already returned."
+                    "Return rejected: food cannot be returned, or the " +
+                    "7-day return window has passed."
                 );
             }
+        }
+
+        private Product? FindProduct(string code)
+        {
+            for (int i = 0; i < catalog.Length; i++)
+            {
+                if (catalog[i].Code.Equals(
+                    code,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return catalog[i];
+                }
+            }
+
+            return null;
         }
     }
 }
