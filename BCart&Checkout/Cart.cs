@@ -1,5 +1,4 @@
 ﻿using Project_OOP.AProduct;
-using ProjectOOP_TokoOnline;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -148,6 +147,8 @@ namespace Project_OOP
             for (int i = 0; i < itemCount; i++)
             {
                 CartItem? item = items[i];
+
+                if (item != null)
 
                 if (item != null)
                 {

@@ -1,38 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP.AProduct
 {
     public class Electronic : Product
     {
-        public bool WarrantyAdded { get; }
+        // Warranty rate added to the price, e.g. 0.05 = +5%. 0 means no warranty.
+        public decimal Guarantee { get; }
 
         public Electronic(
             string code,
-            string productName,
+            string name,
             decimal price,
             int stock,
-            bool warrantyAdded
-        ) : base(code, productName, price, stock)
+            decimal guarantee
+        ) : base(code, name, price, stock)
         {
-            WarrantyAdded = warrantyAdded;
-        }
-
-        public override decimal FinalPrice()
-        {
-            if (WarrantyAdded)
+            if (guarantee < 0)
             {
-                return Price * 1.05m;
+                throw new ArgumentException(
+                    $"Validation: guarantee of '{name}' cannot be negative."
+                );
             }
 
-            return Price;
+            Guarantee = guarantee;
         }
 
-        public override bool CanBeReturned(int daysSincePurchase)
+        public override string GetCategory()
         {
-            return daysSincePurchase >= 0
-                && daysSincePurchase <= 7;
+            return "Electronic";
+        }
+
+        // Price plus warranty surcharge (e.g. +5%).
+        public override decimal GetFinalPrice()
+        {
+            return Price * (1 + Guarantee);
+        }
+
+        // Electronics can be returned (the 7-day window is checked by Customer).
+        public override bool CanBeReturned()
+        {
+            return true;
         }
     }
 }
