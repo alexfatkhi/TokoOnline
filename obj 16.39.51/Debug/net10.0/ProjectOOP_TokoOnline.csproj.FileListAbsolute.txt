@@ -1,0 +1,15 @@
+C:\Users\hp\source\repos\Project OOP\Project OOP\bin\Debug\net10.0\ProjectOOP_TokoOnline.exe
+C:\Users\hp\source\repos\Project OOP\Project OOP\bin\Debug\net10.0\ProjectOOP_TokoOnline.deps.json
+C:\Users\hp\source\repos\Project OOP\Project OOP\bin\Debug\net10.0\ProjectOOP_TokoOnline.runtimeconfig.json
+C:\Users\hp\source\repos\Project OOP\Project OOP\bin\Debug\net10.0\ProjectOOP_TokoOnline.dll
+C:\Users\hp\source\repos\Project OOP\Project OOP\bin\Debug\net10.0\ProjectOOP_TokoOnline.pdb
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.AssemblyInfoInputs.cache
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.AssemblyInfo.cs
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.csproj.CoreCompileInputs.cache
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.dll
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\refint\ProjectOOP_TokoOnline.dll
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.pdb
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectOOP_TokoOnline.genruntimeconfig.cache
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ref\ProjectOOP_TokoOnline.dll
+C:\Users\hp\source\repos\Project OOP\Project OOP\obj\Debug\net10.0\ProjectO.A181F0EE.Up2Date
