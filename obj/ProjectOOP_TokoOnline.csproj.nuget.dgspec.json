@@ -1,26 +1,32 @@
 {
   "format": 1,
   "restore": {
-    "/Users/alex/Downloads/TokoOnline/TokoOnline/ProjectOOP_TokoOnline.csproj": {}
+    "C:\\Users\\hp\\Documents\\TugasDotnet\\TokoOnline\\ProjectOOP_TokoOnline.csproj": {}
   },
   "projects": {
-    "/Users/alex/Downloads/TokoOnline/TokoOnline/ProjectOOP_TokoOnline.csproj": {
+    "C:\\Users\\hp\\Documents\\TugasDotnet\\TokoOnline\\ProjectOOP_TokoOnline.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/alex/Downloads/TokoOnline/TokoOnline/ProjectOOP_TokoOnline.csproj",
+        "projectUniqueName": "C:\\Users\\hp\\Documents\\TugasDotnet\\TokoOnline\\ProjectOOP_TokoOnline.csproj",
         "projectName": "ProjectOOP_TokoOnline",
-        "projectPath": "/Users/alex/Downloads/TokoOnline/TokoOnline/ProjectOOP_TokoOnline.csproj",
-        "packagesPath": "/Users/alex/.nuget/packages/",
-        "outputPath": "/Users/alex/Downloads/TokoOnline/TokoOnline/obj/",
+        "projectPath": "C:\\Users\\hp\\Documents\\TugasDotnet\\TokoOnline\\ProjectOOP_TokoOnline.csproj",
+        "packagesPath": "C:\\Users\\hp\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\hp\\Documents\\TugasDotnet\\TokoOnline\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "/Users/alex/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\hp\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "/opt/homebrew/Cellar/dotnet/10.0.401/libexec/library-packs": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -62,7 +68,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.401/libexec/sdk/10.0.401/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

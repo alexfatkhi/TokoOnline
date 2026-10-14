@@ -149,8 +149,6 @@ namespace Project_OOP
                 CartItem? item = items[i];
 
                 if (item != null)
-
-                if (item != null)
                 {
                     item.Product.ReduceStock(item.Quantity);
                 }
