@@ -13,9 +13,7 @@ namespace Project_OOP
 
         public bool AddItem(Product product, int quantity)
         {
-            if (product == null ||
-                quantity <= 0 ||
-                quantity > product.Stock)
+            if (product == null || quantity <= 0 || quantity > product.Stock)
             {
                 return false;
             }
@@ -29,8 +27,7 @@ namespace Project_OOP
             {
                 CartItem? currentItem = items[i];
 
-                if (currentItem != null &&
-                    currentItem.Product.Code == product.Code)
+                if (currentItem != null && currentItem.Product.Code == product.Code)
                 {
                     int newQuantity = currentItem.Quantity + quantity;
 
@@ -77,8 +74,10 @@ namespace Project_OOP
             {
                 return 0m;
             }
-
-            return 15000m;
+            else
+            {
+                return 15000m;
+            }
         }
 
         public void ShowItems()
@@ -142,7 +141,7 @@ namespace Project_OOP
 
             if (customer is Member memberForPoints)
             {
-                pointsEarned = memberForPoints.HitungPoin(subtotal);
+                pointsEarned = memberForPoints.CountPoint(subtotal);
             }
 
             // Reduce stock after all validations succeed
@@ -168,7 +167,7 @@ namespace Project_OOP
             // Award points only after successful checkout
             if (customer is Member memberToReward)
             {
-                memberToReward.TambahPoin(subtotal);
+                memberToReward.AddPoint(subtotal);
             }
 
             // Empty the cart after checkout

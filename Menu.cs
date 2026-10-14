@@ -14,9 +14,7 @@ namespace ProjectOOP_TokoOnline
         private Transaction?[] transactionHistory =
             new Transaction?[10];
 
-        public Menu(
-            Member[] registeredMembers,
-            Product[] catalog)
+        public Menu(Member[] registeredMembers, Product[] catalog)
         {
             this.registeredMembers = registeredMembers;
             this.catalog = catalog;

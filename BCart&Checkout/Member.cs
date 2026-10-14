@@ -14,14 +14,14 @@ namespace ProjectOOP_TokoOnline
             Point = 0;
         }
 
-        public int HitungPoin(decimal totalBelanja)
+        public int CountPoint(decimal totalBelanja)
         {
             return (int)(totalBelanja / 10000m);
         }
 
-        public void TambahPoin(decimal totalBelanja)
+        public void AddPoint(decimal totalBelanja)
         {
-            Point += HitungPoin(totalBelanja);
+            Point += CountPoint(totalBelanja);
         }
     }
 }
