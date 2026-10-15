@@ -2,15 +2,21 @@
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
+using Project_OOP.AProduct;
 
 namespace TokoOnline_New.BCart_Checkout
 {
     public class Cart
     {
-        public Buyer Buyer { get; private set }
-        private Product[] product = new Product[10];
+        public Buyer Buyer { get; private set; }
+        private Product[] products = new Product[10];
         private int[] quantities = new int[10];
         private int itemCount = 0;
+
+        public Cart(Buyer buyer)
+        {
+            Buyer = buyer;
+        }
 
         public bool Add(Product product)
         {
@@ -98,16 +104,66 @@ namespace TokoOnline_New.BCart_Checkout
 
             for (int i = 0; i < itemCount; i++)
             {
+                if (!products[i].CanBuy())
+                {
+                    return 0;
+                }
 
-                
+                if (quantities[i] > products[i].Stock)
+                {
+                    return 0;
+                }
             }
+
+            int subtotal = CalculateTotal();
+            int shipping = CalculateShipping();
+            int totalPayment = subtotal + shipping;
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                products[i].ReduceStock(quantities[i]);
+            }
+
+            Buyer.AddPoints(subtotal);
+
+            products = new Product[10];
+            quantities = new int[10];
+            itemCount = 0;
+
+            return totalPayment;
         }
 
         public void PrintItems()
         {
+            Console.WriteLine();
+            Console.WriteLine("=== CART ITEMS ===");
 
+            if (itemCount == 0)
+            {
+                Console.WriteLine("Cart is empty.");
+                return;
+            }
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                int subtotal =
+                    products[i].FinalPrice() * quantities[i];
+
+                Console.WriteLine(
+                    products[i].Name
+                    + " | Quantity: " + quantities[i]
+                    + " | Price: Rp"
+                    + products[i].FinalPrice().ToString("N0")
+                    + " | Subtotal: Rp"
+                    + subtotal.ToString("N0"));
+            }
+
+            Console.WriteLine(
+                "Total: Rp" + CalculateTotal().ToString("N0"));
+
+            Console.WriteLine(
+                "Shipping: Rp" +
+                CalculateShipping().ToString("N0"));
         }
-
-
     }
 }
