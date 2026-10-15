@@ -1,14 +1,13 @@
-﻿using Project_OOP.AProduct;
+﻿
+using Project_OOP.AProduct;
 using ProjectOOP_TokoOnline;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Project_OOP
 {
     public class Transaction
     {
-        private Product?[] productsBought = new Product?[10];
+        private Product[] productsBought = new Product[10];
         private int[] quantities = new int[10];
         private decimal[] purchasePrices = new decimal[10];
         private bool[] returnedItems = new bool[10];
@@ -24,7 +23,7 @@ namespace Project_OOP
 
         public static int TotalTransactions { get; private set; } = 0;
 
-        public Transaction( Customer customer, CartItem?[] cartItems, int itemCount, decimal shippingCost, int pointsEarned)
+        public Transaction(Customer customer, CartItem[] cartItems, int itemCount, decimal shippingCost, int pointsEarned)
         {
             Customer = customer;
             PurchaseDate = DateTime.Today;
@@ -32,26 +31,95 @@ namespace Project_OOP
             ShippingCost = shippingCost;
             PointsEarned = pointsEarned;
 
-            decimal subtotal = 0m;
+            decimal subtotal = 0;
 
             for (int i = 0; i < itemCount; i++)
             {
-                CartItem? item = cartItems[i];
+                CartItem item = cartItems[i];
 
                 if (item != null)
                 {
-                    productsBought[i] = item.Product;
-                    quantities[i] = item.Quantity;
-                    purchasePrices[i] = item.Subtotal() / item.Quantity;
+                    //ngambil data product dan jumlahnya
+                    Product product = item.Product;
+                    int quantity = item.Quantity;
 
-                    subtotal += item.Subtotal();
+                    //simpan
+                    productsBought[i] = product;
+                    quantities[i] = quantity;
+
+                    purchasePrices[i] = product.GetFinalPrice();
+
+                    decimal itemSubtotal = item.Subtotal();
+                    subtotal = subtotal + itemSubtotal;
                 }
             }
 
             Subtotal = subtotal;
             TotalPayment = Subtotal + ShippingCost;
-
+                
             TotalTransactions++;
+        }
+
+        public bool ProcessReturn(int itemIndex)
+        {
+            if (itemIndex < 0 || itemIndex >= ItemCount)
+            {
+                return false;
+            }
+
+            Product product = productsBought[itemIndex];
+
+            if (product == null)
+            {
+                return false;
+            }
+            
+            if (returnedItems[itemIndex])
+            {
+                return false;
+            }
+
+            int daysSincePurchase = (DateTime.Today - PurchaseDate).Days;
+
+            if (daysSincePurchase < 0 || daysSincePurchase > 7)
+            {
+                return false;
+            }
+
+            bool canBeReturned = product.CanBeReturned();
+
+            if (!canBeReturned)
+            {
+                return false;
+            }
+
+            int quantity = quantities[itemIndex];
+
+            product.RestoreStock(quantity);
+
+            returnedItems[itemIndex] = true;
+
+            return true;
+        }
+
+        public decimal GetRefundAmount(int itemIndex)
+        {
+            if (itemIndex < 0 || itemIndex >= ItemCount)
+            {
+                return 0;
+            }
+
+            if (!returnedItems[itemIndex])
+            {
+                return 0;
+            }
+
+            decimal price = purchasePrices[itemIndex];
+            int quantity = quantities[itemIndex];
+
+            decimal refund = price * quantity;
+
+            return refund;
         }
 
         public void PrintReceipt()
@@ -67,15 +135,26 @@ namespace Project_OOP
 
                 if (product != null)
                 {
-                    string status = returnedItems[i] ? " (Returned)" : "";
+                    string productName = product.Name;
+                    int quantity = quantities[i];
+                    decimal price = purchasePrices[i];
+
+                    decimal itemTotal = price * quantity;
+
+                    string status = "";
+
+                    if (returnedItems[i])
+                    {
+                        status = " (Returned)";
+                    }
 
                     Console.WriteLine(
-                        $"{product.ProductName} x {quantities[i]} " +
-                        $"= Rp{purchasePrices[i] * quantities[i]:N0}{status}"
+                        $"{productName} x {quantity} " +
+                        $"= Rp{itemTotal:N0}{status}"
                     );
                 }
             }
-
+                
             Console.WriteLine("-------------------");
             Console.WriteLine($"Subtotal: Rp{Subtotal:N0}");
             Console.WriteLine($"Shipping: Rp{ShippingCost:N0}");
@@ -83,53 +162,5 @@ namespace Project_OOP
             Console.WriteLine($"Points earned: {PointsEarned}");
         }
 
-        public bool ProcessReturn(int itemIndex)
-        {
-            if (itemIndex < 0 || itemIndex >= ItemCount)
-            {
-                return false;
-            }
-
-            Product? product = productsBought[itemIndex];
-
-            if (product == null || returnedItems[itemIndex])
-            {
-                return false;
-            }
-
-            int daysSincePurchase =
-                (DateTime.Today - PurchaseDate).Days;
-
-            if (!product.CanBeReturned(daysSincePurchase))
-            {
-                return false;
-            }
-
-            bool stockRestored = product.RestoreStock(quantities[itemIndex]);
-
-            if (!stockRestored)
-            {
-                return false;
-            }
-
-            returnedItems[itemIndex] = true;
-
-            return true;
-        }
-
-        public decimal GetRefundAmount(int itemIndex)
-        {
-            if (itemIndex < 0 || itemIndex >= ItemCount)
-            {
-                return 0m;
-            }
-
-            if (!returnedItems[itemIndex])
-            {
-                return 0m;
-            }
-
-            return purchasePrices[itemIndex] * quantities[itemIndex];
-        }
     }
 }

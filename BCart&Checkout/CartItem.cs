@@ -1,7 +1,5 @@
-﻿using Project_OOP.AProduct;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using Project_OOP.AProduct;
 
 namespace Project_OOP
 {
@@ -18,17 +16,26 @@ namespace Project_OOP
 
         public decimal Subtotal()
         {
-            return Product.FinalPrice() * Quantity;
+            decimal finalPrice = Product.GetFinalPrice();
+            decimal subtotal = finalPrice * Quantity;
+
+            return subtotal;
         }
 
         public bool UpdateQuantity(int quantity)
         {
-            if (quantity <= 0 || quantity > Product.Stock)
+            if (quantity <= 0)
+            {
+                return false;
+            }
+
+            if (quantity > Product.Stock)
             {
                 return false;
             }
 
             Quantity = quantity;
+
             return true;
         }
     }

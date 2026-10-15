@@ -1,28 +1,18 @@
+
 using System;
 using Project_OOP;
 using Project_OOP.AProduct;
 
 namespace ProjectOOP_TokoOnline
 {
-    // Console UI layer that wires the user to the domain classes.
     public class Menu
     {
-        // One completed purchase line, kept so it can be returned later.
-        private class PurchaseRecord
-        {
-            public Product Product { get; }
-            public int Quantity { get; }
-            public bool Returned { get; set; }
+        private Member[] registeredMembers;
+        private Product[] catalog;
 
-            public PurchaseRecord(Product product, int quantity)
-            {
-                Product = product;
-                Quantity = quantity;
-            }
-        }
+        private Cart cart = new Cart();
 
-        private readonly Member[] registeredMembers;
-        private readonly Product[] catalog;
+        private Transaction[] transactionHistory = new Transaction[10];
 
         public Menu(Member[] registeredMembers, Product[] catalog)
         {
@@ -32,22 +22,29 @@ namespace ProjectOOP_TokoOnline
 
         public void Start()
         {
-            Customer currentCustomer = IdentifyCustomer();
+            Console.Clear();
+
+            Customer customer = IdentifyCustomer();
 
             Console.WriteLine();
             Console.WriteLine(
-                $"Welcome to our online shop, {currentCustomer.CustomerName}!"
+                "Welcome to our online shop, " + customer.CustomerName + "!"
             );
+
+            WaitForUser();
 
             bool isRunning = true;
 
             while (isRunning)
             {
+                Console.Clear();
+
                 ShowMainMenu();
 
                 if (!int.TryParse(Console.ReadLine(), out int choice))
                 {
                     Console.WriteLine("Please enter a valid number.");
+                    WaitForUser();
                     continue;
                 }
 
@@ -55,22 +52,27 @@ namespace ProjectOOP_TokoOnline
                 {
                     case 1:
                         ShowProducts();
+                        WaitForUser();
                         break;
 
                     case 2:
                         AddProductToCart();
+                        WaitForUser();
                         break;
 
                     case 3:
-                        cart.PrintContents();
+                        cart.ShowItems();
+                        WaitForUser();
                         break;
 
                     case 4:
-                        Checkout(currentCustomer);
+                        Checkout(customer);
+                        WaitForUser();
                         break;
 
                     case 5:
-                        ReturnProduct(currentCustomer);
+                        ReturnProduct();
+                        WaitForUser();
                         break;
 
                     case 6:
@@ -80,6 +82,7 @@ namespace ProjectOOP_TokoOnline
 
                     default:
                         Console.WriteLine("Invalid menu choice.");
+                        WaitForUser();
                         break;
                 }
             }
@@ -87,9 +90,9 @@ namespace ProjectOOP_TokoOnline
 
         private Customer IdentifyCustomer()
         {
-            string name;
+            string name = "";
 
-            do
+            while (name == "")
             {
                 Console.Write("Enter your name: ");
                 name = (Console.ReadLine() ?? "").Trim();
@@ -98,20 +101,18 @@ namespace ProjectOOP_TokoOnline
                 {
                     Console.WriteLine("Name cannot be empty.");
                 }
-
-            } while (name == "");
+            }
 
             for (int i = 0; i < registeredMembers.Length; i++)
             {
-                if (registeredMembers[i].CustomerName.Equals(
-                    name,
-                    StringComparison.OrdinalIgnoreCase))
-                {
-                    Member member = registeredMembers[i];
+                //narik object member sementara
+                Member member = registeredMembers[i];
 
+                if (member.CustomerName == name)
+                {
                     Console.WriteLine("Membership status: Member");
-                    Console.WriteLine($"Welcome back, {member.CustomerName}!");
-                    Console.WriteLine($"Your points: {member.Point}");
+                    Console.WriteLine("Welcome back, " + member.CustomerName + "!");
+                    Console.WriteLine("Your points: " + member.Point);
 
                     return member;
                 }
@@ -122,49 +123,61 @@ namespace ProjectOOP_TokoOnline
             Console.Write("Enter your address: ");
             string address = (Console.ReadLine() ?? "").Trim();
 
-            return new Customer(name, address);
+            Customer newCustomer = new Customer(name, address);
+
+            return newCustomer;
         }
 
         private void ShowMainMenu()
         {
-            Console.WriteLine();
-            Console.WriteLine("===== ONLINE SHOP =====");
+            Console.WriteLine("========== ONLINE SHOP ==========");
             Console.WriteLine("1. View Products");
-            Console.WriteLine("2. Add to Cart");
+            Console.WriteLine("2. Add Product to Cart");
             Console.WriteLine("3. View Cart");
             Console.WriteLine("4. Checkout");
             Console.WriteLine("5. Return Product");
             Console.WriteLine("6. Exit");
+            Console.WriteLine("=================================");
             Console.Write("Choose: ");
         }
 
         private void ShowProducts()
         {
             Console.WriteLine();
-            Console.WriteLine("===== PRODUCT CATALOG =====");
+            Console.WriteLine("========== PRODUCT CATALOG ==========");
 
             for (int i = 0; i < catalog.Length; i++)
             {
+                // ngambil object product
                 Product product = catalog[i];
 
                 Console.WriteLine(product.GetCatalogInfo());
 
-                if (product is Food food)
+                if (product is Food)
                 {
+                    Food food = (Food)product;
+
                     Console.WriteLine(
-                        $"    Days until expired: {food.DaysUntilExpired}" +
-                        (food.IsExpired() ? " (Expired)" : "")
+                        "Days until expired: " + food.DaysUntilExpired
                     );
+
+                    if (food.IsExpired())
+                    {
+                        Console.WriteLine("Status: Expired");
+                    }
                 }
             }
         }
 
         private void AddProductToCart()
         {
+            ShowProducts();
+
+            Console.WriteLine();
             Console.Write("Enter product code: ");
             string code = (Console.ReadLine() ?? "").Trim();
 
-            Product? selectedProduct = FindProduct(code);
+            Product selectedProduct = FindProduct(code);
 
             if (selectedProduct == null)
             {
@@ -180,112 +193,175 @@ namespace ProjectOOP_TokoOnline
                 return;
             }
 
-            if (cart.AddItem(selectedProduct, quantity))
+            bool added = cart.AddItem(selectedProduct, quantity);
+
+            if (added)
             {
                 Console.WriteLine("Product added to cart.");
             }
             else
             {
                 Console.WriteLine(
-                    "Cannot add product. Reason: insufficient stock, " +
-                    "invalid quantity, expired food, or cart is full."
+                    "Cannot add product. Check quantity, stock, " +
+                    "expiration date, or cart capacity."
                 );
             }
         }
 
         private void Checkout(Customer customer)
         {
-            if (cart.IsEmpty())
+            decimal subtotal = cart.CalculateTotal();
+
+            if (subtotal == 0)
             {
                 Console.WriteLine("Your cart is empty.");
                 return;
             }
 
-            // Remember the purchased lines (for returns) before the cart is cleared.
-            foreach (CartItem line in cart.GetItems())
+            int emptyIndex = -1;
+
+            for (int i = 0; i < transactionHistory.Length; i++)
             {
-                purchases.Add(new PurchaseRecord(line.Product, line.Quantity));
-            }
-
-            Console.WriteLine();
-            customer.Checkout(cart);
-        }
-
-        private void ReturnProduct(Customer customer)
-        {
-            Console.WriteLine();
-            Console.WriteLine("===== PURCHASED ITEMS =====");
-
-            bool hasReturnable = false;
-
-            for (int i = 0; i < purchases.Count; i++)
-            {
-                PurchaseRecord record = purchases[i];
-                string status = record.Returned ? " (Returned)" : "";
-
-                Console.WriteLine(
-                    $"{i + 1}. {record.Product.Name} x {record.Quantity} " +
-                    $"[{record.Product.GetCategory()}]{status}"
-                );
-
-                if (!record.Returned)
+                if (transactionHistory[i] == null)
                 {
-                    hasReturnable = true;
+                    emptyIndex = i;
+                    break;
                 }
             }
 
-            if (!hasReturnable)
+            if (emptyIndex == -1)
             {
-                Console.WriteLine("No items available to return.");
+                Console.WriteLine("Transaction history is full.");
                 return;
             }
 
-            Console.Write("Choose item number to return: ");
+            Transaction newTransaction = cart.Checkout(customer);
 
-            if (!int.TryParse(Console.ReadLine(), out int itemNumber) ||
-                itemNumber < 1 ||
-                itemNumber > purchases.Count)
+            if (newTransaction == null)
+            {
+                Console.WriteLine("Checkout failed. Please check the errors above.");
+                return;
+            }
+
+            transactionHistory[emptyIndex] = newTransaction;
+
+            Console.WriteLine();
+            Console.WriteLine("Checkout successful!");
+
+            newTransaction.PrintReceipt();
+
+            if (customer is Member)
+            {
+                Member member = (Member)customer;
+
+                Console.WriteLine("Your total points: " + member.Point);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Stock has been updated.");
+        }
+
+        private void ReturnProduct()
+        {
+            Console.WriteLine();
+            Console.WriteLine("========== TRANSACTION HISTORY ==========");
+
+            bool hasTransaction = false;
+
+            for (int i = 0; i < transactionHistory.Length; i++)
+            {
+                Transaction transaction = transactionHistory[i];
+
+                if (transaction != null)
+                {
+                    hasTransaction = true;
+
+                    Customer customer = transaction.Customer;
+                    string customerName = customer.CustomerName;
+
+                    DateTime purchaseDate = transaction.PurchaseDate;
+                    decimal totalPayment = transaction.TotalPayment;
+
+                    Console.WriteLine(
+                        $"{i + 1}. {customerName} | {purchaseDate:dd/MM/yyyy} | Rp{totalPayment:N0}"
+                    );
+                }
+            }
+
+            if (!hasTransaction)
+            {
+                Console.WriteLine("No completed transactions.");
+                return;
+            }
+
+            Console.WriteLine();
+            Console.Write("Choose transaction number: ");
+
+            if (!int.TryParse( Console.ReadLine(), out int transactionNumber))
+            {
+                Console.WriteLine("Invalid transaction number.");
+                return;
+            }
+
+            if (transactionNumber < 1 || transactionNumber > transactionHistory.Length)
+            {
+                Console.WriteLine("Transaction not found.");
+                return;
+            }
+
+            Transaction selectedTransaction = transactionHistory[transactionNumber - 1];
+
+            if (selectedTransaction == null)
+            {
+                Console.WriteLine("Transaction not found.");
+                return;
+            }
+
+            Console.WriteLine();
+
+            selectedTransaction.PrintReceipt();
+
+            Console.WriteLine();
+            Console.WriteLine(
+                "Enter the item number shown on the receipt."
+            );
+
+            Console.Write("Item number to return: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int itemNumber))
             {
                 Console.WriteLine("Invalid item number.");
                 return;
             }
 
-            PurchaseRecord selected = purchases[itemNumber - 1];
-
-            if (selected.Returned)
+            if (itemNumber < 1 ||
+                itemNumber > selectedTransaction.ItemCount)
             {
-                Console.WriteLine("This item has already been returned.");
+                Console.WriteLine("Item not found.");
                 return;
             }
 
-            Console.Write("Days since purchase: ");
+            int itemIndex = itemNumber - 1;
 
-            if (!int.TryParse(Console.ReadLine(), out int days))
+            bool returnSuccessful =
+                selectedTransaction.ProcessReturn(itemIndex);
+
+            if (returnSuccessful)
             {
-                Console.WriteLine("Please enter a valid number of days.");
-                return;
-            }
-
-            if (customer.ReturnProduct(selected.Product, days))
-            {
-                // Return approved: restore stock and refund the money.
-                selected.Product.RestoreStock(selected.Quantity);
-                selected.Returned = true;
-
                 decimal refund =
-                    selected.Product.GetFinalPrice() * selected.Quantity;
+                    selectedTransaction.GetRefundAmount(itemIndex);
 
+                Console.WriteLine();
                 Console.WriteLine("Return successful.");
-                Console.WriteLine($"Refund: Rp{refund:N0}");
-                Console.WriteLine(
-                    $"Stock of {selected.Product.Name} is now {selected.Product.Stock}."
-                );
+                Console.WriteLine("Refund: Rp" + refund.ToString("N0"));
+                Console.WriteLine("Product stock has been restored.");
             }
             else
             {
+                Console.WriteLine();
                 Console.WriteLine(
-                    "Return rejected: food cannot be returned, or the " +
-                    "7-day return window has passed."
+                    "Return rejected. The product may not be returnable, " +
+                    "the 7-day period may have passed, or it was already returned."
                 );
             }
         }
@@ -293,16 +369,24 @@ namespace ProjectOOP_TokoOnline
         private Product? FindProduct(string code)
         {
             for (int i = 0; i < catalog.Length; i++)
-            {
-                if (catalog[i].Code.Equals(
-                    code,
-                    StringComparison.OrdinalIgnoreCase))
+            { 
+                //merujuk ke satu objectnyh
+                Product product = catalog[i];
+
+                if (product.Code == code)
                 {
-                    return catalog[i];
+                    return product;
                 }
             }
 
             return null;
+        }
+
+        private void WaitForUser()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Press Enter to continue...");
+            Console.ReadLine();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace ProjectOOP_TokoOnline
 
         public int CountPoint(decimal totalBelanja)
         {
-            return (int)(totalBelanja / 10000m);
+            return (int)(totalBelanja / 10000);
         }
 
         public void AddPoint(decimal totalBelanja)
