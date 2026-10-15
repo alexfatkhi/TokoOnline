@@ -121,11 +121,6 @@ namespace TokoOnline_New
                             {
                                 Console.WriteLine("Product added to cart.");
                             }
-                            else
-                            {
-                                Console.WriteLine(
-                                    "Cannot add product. Check stock or product availability.");
-                            }
                         }
                         else
                         {

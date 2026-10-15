@@ -18,6 +18,7 @@ namespace TokoOnline_New.BCart_Checkout
             Buyer = buyer;
         }
 
+
         public bool Add(Product product)
         {
             return Add(product, 1);
@@ -25,18 +26,38 @@ namespace TokoOnline_New.BCart_Checkout
 
         public bool Add(Product product, int qty)
         {
-            if (product == null || qty <= 0)
+            if (product == null)
             {
+                Console.WriteLine("Product is invalid.");
+                return false;
+            }
+
+            if (qty <= 0)
+            {
+                Console.WriteLine("Quantity must be greater than 0.");
+                return false;
+            }
+
+            if (product is Food)
+            {
+                Food food = (Food)product;
+
+                if (food.DaysUntilExpiry <= 0)
+                {
+                    Console.WriteLine("Product cannot be added because is expired.");
+                    return false;
+                }
+            }
+
+            if (product.Stock <= 0)
+            {
+                Console.WriteLine("Product cannot be added because is out of stock.");
                 return false;
             }
 
             if (!product.CanBuy())
             {
-                return false;
-            }
-
-            if (qty > product.Stock)
-            {
+                Console.WriteLine("Product cannot be purchased.");
                 return false;
             }
 
@@ -48,6 +69,9 @@ namespace TokoOnline_New.BCart_Checkout
 
                     if (newQuantity > product.Stock)
                     {
+                        Console.WriteLine(
+                            "Not enough stock. Available stock: "
+                            + (product.Stock - quantities[i]));
                         return false;
                     }
 
@@ -58,6 +82,7 @@ namespace TokoOnline_New.BCart_Checkout
 
             if (itemCount >= products.Length)
             {
+                Console.WriteLine("Cart is full. Maximum 10 product types.");
                 return false;
             }
 
@@ -67,6 +92,7 @@ namespace TokoOnline_New.BCart_Checkout
 
             return true;
         }
+
 
         public int CalculateTotal()
         {
