@@ -1,5 +1,4 @@
-﻿
-using Project_OOP.AProduct;
+﻿using Project_OOP.AProduct;
 
 namespace Project_OOP
 {
