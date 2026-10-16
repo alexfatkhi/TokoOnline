@@ -215,36 +215,45 @@ namespace TokoOnline_New
                     }
                     else
                     {
-                        Console.Write("Enter voucher code (press Enter to skip): ");
-                        string voucherCode = (Console.ReadLine() ?? "").Trim().ToUpper();
-
+                        string voucherCode = "";
                         bool voucherValid = false;
-                        bool voucherUsed = false;
 
-                        if (voucherCode != "")
+                        while (true)
                         {
+                            Console.Write("Enter voucher code (press Enter to skip): ");
+                            voucherCode = (Console.ReadLine() ?? "").Trim().ToUpper();
+
+                            // Kalau kosong, lanjut checkout tanpa voucher
+                            if (voucherCode == "")
+                            {
+                                break;
+                            }
+
+                            bool foundVoucher = false;
+
                             for (int i = 0; i < availableVouchers.Length; i++)
                             {
                                 if (availableVouchers[i] == voucherCode)
                                 {
-                                    voucherValid = true;
+                                    foundVoucher = true;
                                     break;
                                 }
                             }
 
-                            if (usedVouchers.Contains(voucherCode))
+                            if (!foundVoucher)
                             {
-                                voucherUsed = true;
+                                Console.WriteLine("Invalid voucher code. Please try again.");
+                                continue;
                             }
 
-                            if (!voucherValid)
+                            if (usedVouchers.Contains(voucherCode))
                             {
-                                Console.WriteLine("Invalid voucher code.");
+                                Console.WriteLine("Voucher has already been used. Please try again.");
+                                continue;
                             }
-                            else if (voucherUsed)
-                            {
-                                Console.WriteLine("Voucher has already been used.");
-                            }
+
+                            voucherValid = true;
+                            break;
                         }
 
                         int subtotal = cart.CalculateTotal();
@@ -260,7 +269,7 @@ namespace TokoOnline_New
                         {
                             int discount = 0;
 
-                            if (voucherValid && !voucherUsed)
+                            if (voucherValid)
                             {
                                 discount = subtotal * 10 / 100;
                                 totalPayment = totalPayment - discount;
@@ -268,7 +277,7 @@ namespace TokoOnline_New
                                 usedVouchers.Add(voucherCode);
 
                                 Console.WriteLine("Voucher applied.");
-                                Console.WriteLine( "Discount: Rp" + discount.ToString("N0"));
+                                Console.WriteLine("Discount: Rp" + discount.ToString("N0"));
                             }
 
                             // Simpan riwayat pembelian
@@ -428,13 +437,14 @@ namespace TokoOnline_New
                 {
                     if (warehouseQueue.Count == 0)
                     {
-                        Console.WriteLine("no orders queue");
+                        Console.WriteLine("No orders in queue.");
                     }
                     else
                     {
                         Order order = warehouseQueue.Dequeue();
 
-                        Console.WriteLine("Processed Order :");
+                        Console.WriteLine("Processed Order:");
+                        order.PrintInfo();
                     }
                 }
                 else if (choice == "7")

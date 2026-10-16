@@ -39,6 +39,17 @@ namespace TokoOnline_New.BCart_Checkout
         public Store(Repository<Product> repository)
         {
             this.repository = repository;
+
+            productsByCode = new Dictionary<string, Product>();
+
+            List<Product> products = repository.GetAll();
+
+            for (int i = 0; i < products.Count; i++)
+            {
+                string code = products[i].Code.ToUpper();
+
+                productsByCode.Add(code, products[i]);
+            }
         }
 
         public Product FindProduct(string code)
@@ -61,7 +72,26 @@ namespace TokoOnline_New.BCart_Checkout
 
             for (int i = 0; i < products.Count; i++)
             {
-                Console.WriteLine($@"{products[i].Code}  |  {products[i].Name} | Rp {products[i].Price.ToString("N0")} | Stock: {products[i].Stock}");
+                Product product = products[i];
+
+                int discount = product.Price - product.FinalPrice();
+                string extraInfo = "";
+
+                if (product is Food)
+                {
+                    Food food = (Food)product;
+
+                    extraInfo = $" | Expires in: {food.DaysUntilExpiry} days";
+
+                    if (food.DaysUntilExpiry <= 0)
+                    {
+                        extraInfo += " (EXPIRED)";
+                    }
+                }
+
+                Console.WriteLine(
+                    $"{product.Code} | {product.Name} | Price: Rp{product.Price:N0} | Discount: Rp{discount:N0} | Stock: {product.Stock}{extraInfo}"
+                );
             }
         }
         public int Refund(Product item, int days)
