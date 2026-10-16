@@ -1,6 +1,6 @@
 using System;
 
-namespace Project_OOP.AProduct
+namespace TokoOnline_New.AProduct
 {
     // Makanan, turunan Product. Tidak bisa diretur.
     public class Food : Product

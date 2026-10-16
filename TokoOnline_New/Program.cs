@@ -1,7 +1,9 @@
 ﻿
+using TokoOnline_New.AProduct;
 using System;
-using Project_OOP.AProduct;
 using TokoOnline_New.BCart_Checkout;
+using TokoOnline_New.Exceptions;
+using TokoOnline_New.TokoOnline_New.BCart_Checkout;
 
 namespace TokoOnline_New
 {
@@ -35,6 +37,14 @@ namespace TokoOnline_New
                 new Food("FD005", "Dodol", 65000, 6, 0)
 
             };
+
+            //simpan produk kereposit
+            Repository<Product> repository = new Repository<Product>();
+
+            for (int i = 0; i < products.Length; i++)
+            {
+                repository.Add(products[i]);
+            }
 
 
             Console.WriteLine("=== TOKO ONLINE ===");
@@ -73,8 +83,17 @@ namespace TokoOnline_New
                 Console.WriteLine("Points: " + buyer.Points);
             }
 
-            Store store = new Store(products);
+            Store store = new Store(repository);
             Cart cart = new Cart(buyer);
+
+            string[] availableVouchers =
+            {
+                "HEMAT10",
+                "BELANJA10",
+                "ILHAM10"
+            };
+
+            HashSet<string> usedVouchers = new HashSet<string>();
 
             Product[] pendingProducts = new Product[10];
             int[] pendingQuantities = new int[10];
@@ -91,6 +110,9 @@ namespace TokoOnline_New
 
             bool isRunning = true;
 
+            Queue<Order> warehouseQueue = new Queue<Order>();
+            int orderNumber = 1;
+
             while (isRunning)
             {
                 Console.WriteLine();
@@ -100,7 +122,8 @@ namespace TokoOnline_New
                 Console.WriteLine("3. View Cart");
                 Console.WriteLine("4. Checkout");
                 Console.WriteLine("5. Return");
-                Console.WriteLine("6. Exit");
+                Console.WriteLine("6. Process Warehouse Order");
+                Console.WriteLine("7. Exit");
                 Console.Write("Choose menu: ");
 
                 string choice = Console.ReadLine() ?? "";
@@ -129,32 +152,47 @@ namespace TokoOnline_New
 
                         if (int.TryParse(Console.ReadLine(), out quantity))
                         {
-                            bool added = cart.Add(selectedProduct, quantity);
-
-                            if (added)
+                            try
                             {
-                                bool alreadyExists = false;
+                                bool added = cart.Add(selectedProduct, quantity);
 
-                                for (int i = 0; i < pendingCount; i++)
+                                if (added)
                                 {
-                                    if (pendingProducts[i].Code == selectedProduct.Code)
+                                    bool alreadyExists = false;
+
+                                    for (int i = 0; i < pendingCount; i++)
                                     {
-                                        pendingQuantities[i] =
-                                            pendingQuantities[i] + quantity;
+                                        if (pendingProducts[i].Code == selectedProduct.Code)
+                                        {
+                                            pendingQuantities[i] =
+                                                pendingQuantities[i] + quantity;
 
-                                        alreadyExists = true;
-                                        break;
+                                            alreadyExists = true;
+                                            break;
+                                        }
                                     }
-                                }
 
-                                if (!alreadyExists)
-                                {
-                                    pendingProducts[pendingCount] = selectedProduct;
-                                    pendingQuantities[pendingCount] = quantity;
-                                    pendingCount++;
-                                }
+                                    if (!alreadyExists)
+                                    {
+                                        pendingProducts[pendingCount] = selectedProduct;
+                                        pendingQuantities[pendingCount] = quantity;
+                                        pendingCount++;
+                                    }
 
-                                Console.WriteLine("Product added to cart.");
+                                    Console.WriteLine("Product added to cart.");
+                                }
+                            }
+                            catch (OutOfStockException ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                            catch (ExpiredProductException ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                            catch (CartFullException ex)
+                            {
+                                Console.WriteLine(ex.Message);
                             }
                         }
                         else
@@ -168,6 +206,7 @@ namespace TokoOnline_New
                     cart.PrintItems();
                 }
 
+
                 else if (choice == "4")
                 {
                     if (historyCount + pendingCount > historyProducts.Length)
@@ -176,6 +215,38 @@ namespace TokoOnline_New
                     }
                     else
                     {
+                        Console.Write("Enter voucher code (press Enter to skip): ");
+                        string voucherCode = (Console.ReadLine() ?? "").Trim().ToUpper();
+
+                        bool voucherValid = false;
+                        bool voucherUsed = false;
+
+                        if (voucherCode != "")
+                        {
+                            for (int i = 0; i < availableVouchers.Length; i++)
+                            {
+                                if (availableVouchers[i] == voucherCode)
+                                {
+                                    voucherValid = true;
+                                    break;
+                                }
+                            }
+
+                            if (usedVouchers.Contains(voucherCode))
+                            {
+                                voucherUsed = true;
+                            }
+
+                            if (!voucherValid)
+                            {
+                                Console.WriteLine("Invalid voucher code.");
+                            }
+                            else if (voucherUsed)
+                            {
+                                Console.WriteLine("Voucher has already been used.");
+                            }
+                        }
+
                         int subtotal = cart.CalculateTotal();
                         int shippingCost = cart.CalculateShipping();
 
@@ -183,11 +254,23 @@ namespace TokoOnline_New
 
                         if (totalPayment == 0)
                         {
-                            Console.WriteLine(
-                                "Checkout failed or cart is empty.");
+                            Console.WriteLine("Checkout failed or cart is empty.");
                         }
                         else
                         {
+                            int discount = 0;
+
+                            if (voucherValid && !voucherUsed)
+                            {
+                                discount = subtotal * 10 / 100;
+                                totalPayment = totalPayment - discount;
+
+                                usedVouchers.Add(voucherCode);
+
+                                Console.WriteLine("Voucher applied.");
+                                Console.WriteLine( "Discount: Rp" + discount.ToString("N0"));
+                            }
+
                             // Simpan riwayat pembelian
                             for (int i = 0; i < pendingCount; i++)
                             {
@@ -211,19 +294,33 @@ namespace TokoOnline_New
                             pendingQuantities = new int[10];
                             pendingCount = 0;
 
+                            Order order = new Order(
+                                orderNumber.ToString("D3"),
+                                buyer.Name,
+                                totalPayment
+                            );
+
+                            warehouseQueue.Enqueue(order);
+                            orderNumber++;
+
+                            Console.WriteLine("Order added to warehouse queue.");
+
                             Console.WriteLine();
                             Console.WriteLine("=== CHECKOUT SUCCESSFUL ===");
                             Console.WriteLine(
-                                "Order Total : Rp" + subtotal.ToString("N0"));
+                                "Order Total   : Rp" + subtotal.ToString("N0"));
                             Console.WriteLine(
-                                "Shipping Cost  : Rp" + shippingCost.ToString("N0"));
+                                "Shipping Cost : Rp" + shippingCost.ToString("N0"));
                             Console.WriteLine(
-                                "Subtotal   : Rp" + totalPayment.ToString("N0"));
+                                "Discount      : Rp" + discount.ToString("N0"));
+                            Console.WriteLine(
+                                "Final Payment : Rp" + totalPayment.ToString("N0"));
                             Console.WriteLine("Buyer points  : " + buyer.Points);
                             Console.WriteLine("Stock has been updated.");
                         }
                     }
                 }
+
 
                 else if (choice == "5")
                 {
@@ -328,6 +425,19 @@ namespace TokoOnline_New
                     }
                 }
                 else if (choice == "6")
+                {
+                    if (warehouseQueue.Count == 0)
+                    {
+                        Console.WriteLine("no orders queue");
+                    }
+                    else
+                    {
+                        Order order = warehouseQueue.Dequeue();
+
+                        Console.WriteLine("Processed Order :");
+                    }
+                }
+                else if (choice == "7")
                 {
                     isRunning = false;
                     Console.WriteLine("Thank you for shopping!");

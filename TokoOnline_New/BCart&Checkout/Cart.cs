@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
-using Project_OOP.AProduct;
+using TokoOnline_New.AProduct;
+using TokoOnline_New.Exceptions;
 
 namespace TokoOnline_New.BCart_Checkout
 {
@@ -17,7 +18,6 @@ namespace TokoOnline_New.BCart_Checkout
         {
             Buyer = buyer;
         }
-
 
         public bool Add(Product product)
         {
@@ -44,8 +44,7 @@ namespace TokoOnline_New.BCart_Checkout
 
                 if (food.DaysUntilExpiry <= 0)
                 {
-                    Console.WriteLine("Product cannot be added because is expired.");
-                    return false;
+                    throw new ExpiredProductException();
                 }
             }
 
@@ -69,10 +68,7 @@ namespace TokoOnline_New.BCart_Checkout
 
                     if (newQuantity > product.Stock)
                     {
-                        Console.WriteLine(
-                            "Not enough stock. Available stock: "
-                            + (product.Stock - quantities[i]));
-                        return false;
+                        throw new OutOfStockException(product.Stock);
                     }
 
                     quantities[i] = newQuantity;
@@ -82,8 +78,7 @@ namespace TokoOnline_New.BCart_Checkout
 
             if (itemCount >= products.Length)
             {
-                Console.WriteLine("Cart is full. Maximum 10 product types.");
-                return false;
+                throw new CartFullException();
             }
 
             products[itemCount] = product;

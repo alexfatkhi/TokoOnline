@@ -1,6 +1,6 @@
 using System;
 
-namespace Project_OOP.AProduct
+namespace TokoOnline_New.AProduct
 {
     // Induk abstract semua produk = Food, Electronic, Clothing.
     public abstract class Product
@@ -22,9 +22,7 @@ namespace Project_OOP.AProduct
 
             if (price <= 0)
             {
-                throw new ArgumentException(
-                    $"Validation: price of '{name}' must be greater than 0 (got {price})."
-                );
+                throw new ArgumentException( $"Validation: price of '{name}' must be greater than 0 (got {price})." );
             }
 
             if (stock < 0)

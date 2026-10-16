@@ -1,6 +1,6 @@
 using System;
 
-namespace Project_OOP.AProduct
+namespace TokoOnline_New.AProduct
 {
     // Elektronik, turunan Product dan bisa diretur.
     public class Electronic : Product, IReturnable

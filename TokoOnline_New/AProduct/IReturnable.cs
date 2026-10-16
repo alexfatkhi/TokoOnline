@@ -1,6 +1,6 @@
 using System;
 
-namespace Project_OOP.AProduct
+namespace TokoOnline_New.AProduct
 {
     // Kontrak untuk produk yang bisa diretur Electronic & Clothing.
     public interface IReturnable
