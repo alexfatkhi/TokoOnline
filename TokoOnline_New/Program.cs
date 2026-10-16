@@ -76,6 +76,19 @@ namespace TokoOnline_New
             Store store = new Store(products);
             Cart cart = new Cart(buyer);
 
+            Product[] pendingProducts = new Product[10];
+            int[] pendingQuantities = new int[10];
+            int pendingCount = 0;
+
+            // Riwayat pembelian
+            Product[] historyProducts = new Product[100];
+            int[] historyQuantities = new int[100];
+            int[] historyReturned = new int[100];
+            int[] historyPrices = new int[100];
+            DateTime[] historyDates = new DateTime[100];
+
+            int historyCount = 0;
+
             bool isRunning = true;
 
             while (isRunning)
@@ -86,7 +99,8 @@ namespace TokoOnline_New
                 Console.WriteLine("2. Add Product to Cart");
                 Console.WriteLine("3. View Cart");
                 Console.WriteLine("4. Checkout");
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("5. Return");
+                Console.WriteLine("6. Exit");
                 Console.Write("Choose menu: ");
 
                 string choice = Console.ReadLine() ?? "";
@@ -119,6 +133,27 @@ namespace TokoOnline_New
 
                             if (added)
                             {
+                                bool alreadyExists = false;
+
+                                for (int i = 0; i < pendingCount; i++)
+                                {
+                                    if (pendingProducts[i].Code == selectedProduct.Code)
+                                    {
+                                        pendingQuantities[i] =
+                                            pendingQuantities[i] + quantity;
+
+                                        alreadyExists = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!alreadyExists)
+                                {
+                                    pendingProducts[pendingCount] = selectedProduct;
+                                    pendingQuantities[pendingCount] = quantity;
+                                    pendingCount++;
+                                }
+
                                 Console.WriteLine("Product added to cart.");
                             }
                         }
@@ -132,32 +167,172 @@ namespace TokoOnline_New
                 {
                     cart.PrintItems();
                 }
+
                 else if (choice == "4")
                 {
-                    int totalPayment = cart.Checkout();
-
-                    if (totalPayment == 0)
+                    if (historyCount + pendingCount > historyProducts.Length)
                     {
-                        Console.WriteLine(
-                            "Checkout failed. Your cart may be empty or a product is unavailable.");
+                        Console.WriteLine("Purchase history is full.");
                     }
                     else
                     {
-                        Console.WriteLine("Checkout successful.");
-                        Console.WriteLine(
-                            "Total payment: Rp" + totalPayment.ToString("N0"));
-                        Console.WriteLine("Points: " + buyer.Points);
+                        int subtotal = cart.CalculateTotal();
+                        int shippingCost = cart.CalculateShipping();
+
+                        int totalPayment = cart.Checkout();
+
+                        if (totalPayment == 0)
+                        {
+                            Console.WriteLine(
+                                "Checkout failed or cart is empty.");
+                        }
+                        else
+                        {
+                            // Simpan riwayat pembelian
+                            for (int i = 0; i < pendingCount; i++)
+                            {
+                                historyProducts[historyCount] =
+                                    pendingProducts[i];
+
+                                historyQuantities[historyCount] =
+                                    pendingQuantities[i];
+
+                                historyReturned[historyCount] = 0;
+
+                                historyPrices[historyCount] =
+                                    pendingProducts[i].FinalPrice();
+
+                                historyDates[historyCount] = DateTime.Today;
+
+                                historyCount++;
+                            }
+
+                            pendingProducts = new Product[10];
+                            pendingQuantities = new int[10];
+                            pendingCount = 0;
+
+                            Console.WriteLine();
+                            Console.WriteLine("=== CHECKOUT SUCCESSFUL ===");
+                            Console.WriteLine(
+                                "Order Total : Rp" + subtotal.ToString("N0"));
+                            Console.WriteLine(
+                                "Shipping Cost  : Rp" + shippingCost.ToString("N0"));
+                            Console.WriteLine(
+                                "Subtotal   : Rp" + totalPayment.ToString("N0"));
+                            Console.WriteLine("Buyer points  : " + buyer.Points);
+                            Console.WriteLine("Stock has been updated.");
+                        }
                     }
                 }
+
                 else if (choice == "5")
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("=== PURCHASE HISTORY ===");
+
+                    if (historyCount == 0)
+                    {
+                        Console.WriteLine("No purchase history.");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < historyCount; i++)
+                        {
+                            Console.WriteLine($"{historyProducts[i].Code} {historyProducts[i].Name} | Purchased: {historyQuantities[i]} | Returned: {historyReturned[i]} | Date: {historyDates[i]:dd/MM/yyyy}");
+                        }
+
+                        Console.Write("Enter product code to return: ");
+                        string code = (Console.ReadLine() ?? "").Trim();
+
+                        bool foundPurchase = false;
+                        bool hasUnreturned = false;
+                        bool foodCannotReturn = false;
+                        bool periodExpired = false;
+                        bool refundDone = false;
+
+                        for (int i = 0; i < historyCount; i++)
+                        {
+                            if (historyProducts[i].Code != code)
+                            {
+                                continue;
+                            }
+
+                            foundPurchase = true;
+
+                            if (historyReturned[i] >= historyQuantities[i])
+                            {
+                                continue;
+                            }
+
+                            hasUnreturned = true;
+
+                            if (!(historyProducts[i] is IReturnable))
+                            {
+                                foodCannotReturn = true;
+                                continue;
+                            }
+
+                            int days =
+                                (DateTime.Today - historyDates[i]).Days;
+
+                            IReturnable returnable =
+                                (IReturnable)historyProducts[i];
+
+                            if (!returnable.CanReturn(days))
+                            {
+                                periodExpired = true;
+                                continue;
+                            }
+
+                            int refundAmount =
+                                store.Refund(historyProducts[i], days);
+
+                            if (refundAmount > 0)
+                            {
+                                historyReturned[i]++;
+
+                                Console.WriteLine("Return successful.");
+                                Console.WriteLine(
+                                    "Refund amount: Rp" +
+                                    historyPrices[i].ToString("N0"));
+                                Console.WriteLine("Product stock has been restored.");
+
+                                refundDone = true;
+                                break;
+                            }
+                        }
+
+                        if (!refundDone)
+                        {
+                            if (!foundPurchase)
+                            {
+                                Console.WriteLine("Product was never purchased.");
+                            }
+                            else if (!hasUnreturned)
+                            {
+                                Console.WriteLine("All purchased units were already returned.");
+                            }
+                            else if (foodCannotReturn)
+                            {
+                                Console.WriteLine("Food cannot be returned.");
+                            }
+                            else if (periodExpired)
+                            {
+                                Console.WriteLine("Return period has expired.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Refund rejected.");
+                            }
+                        }
+                    }
+                }
+                else if (choice == "6")
                 {
                     isRunning = false;
                     Console.WriteLine("Thank you for shopping!");
                 }
-                else
-                {
-                    Console.WriteLine("Invalid menu choice.");
-                }
+
             }
         }
     }
