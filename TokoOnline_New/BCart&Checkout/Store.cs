@@ -68,30 +68,32 @@ namespace TokoOnline_New.BCart_Checkout
         {
             List<Product> products = repository.GetAll();
 
+            bool hasPromo = products.Any(p => p.FinalPrice() < p.Price);
+
+            if (hasPromo)
+            {
+                products = products
+                 .OrderBy(p => p is Electronic ? 1 : p is Clothing ? 2 : 3)
+                 .ThenBy(p => p.FinalPrice())
+                 .ToList();
+            }
+
             Console.WriteLine("=== PRODUCT CATALOG ===");
 
-            for (int i = 0; i < products.Count; i++)
+            foreach (var product in products)
             {
-                Product product = products[i];
-
-                int discount = product.Price - product.FinalPrice();
-                string extraInfo = "";
-
-                if (product is Food)
+                if (product.FinalPrice() < product.Price)
                 {
-                    Food food = (Food)product;
-
-                    extraInfo = $" | Expires in: {food.DaysUntilExpiry} days";
-
-                    if (food.DaysUntilExpiry <= 0)
-                    {
-                        extraInfo += " (EXPIRED)";
-                    }
+                    Console.WriteLine(
+                        $"{product.Code} | {product.Name} | Normal Price: Rp. {product.Price} | Promo Price: Rp. {product.FinalPrice()} | Stock: {product.Stock}"
+                    );
                 }
-
-                Console.WriteLine(
-                    $"{product.Code} | {product.Name} | Price: Rp{product.Price:N0} | Discount: Rp{discount:N0} | Stock: {product.Stock}{extraInfo}"
-                );
+                else
+                {
+                    Console.WriteLine(
+                        $"{product.Code} | {product.Name} | Price: Rp. {product.FinalPrice()} | Stock: {product.Stock}"
+                    );
+                }
             }
         }
         public int Refund(Product item, int days)

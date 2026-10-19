@@ -8,12 +8,12 @@ namespace TokoOnline_New.BCart_Checkout
         public bool Member { get; set; }
         public int Points { get; private set; }
 
-        public Buyer(string buyerId, string name, bool member)
+        public Buyer(string buyerId, string name, bool member, int points)
         {
             BuyerId = buyerId;
             Name = name;
             Member = member;
-            Points = 0;
+            Points = points;
         }
 
         public void AddPoints(int totalSpent)

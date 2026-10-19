@@ -13,20 +13,23 @@ namespace TokoOnline_New
         {
             Buyer[] registeredBuyers = new Buyer[]
             {
-                new Buyer("B001", "Fatkhi", true),
-                new Buyer("B002", "Ilham", true)
+                new Buyer("B001", "Fatkhi", true, 250),
+                new Buyer("B002", "Ilham", true,400),
+                new Buyer("B003", "Rama", true, 500),
+                new Buyer("B004", "Dimas", false, 0),
+
             };
             Product[] products = new Product[]
             {
                 new Electronic("EL001", "Mouse", 100000, 10, false),
                 new Electronic("EL002", "Headset", 120000, 10, false),
                 new Electronic("EL003", "Keyboard", 300000, 5, true),
-                new Electronic("EL004", "Keyboard", 300000, 5, true),
+                new Electronic("EL004", "Gaming", 3000000, 5, true),
 
 
-                new Clothing("CL001", "T-Shirt", 80000, 20, "M", true),
+                new Clothing("CL001", "T-Shirt", 800000, 20, "M", true),
                 new Clothing("CL002", "Jacket", 200000, 10, "L", false),
-                new Clothing("CL003", "Hoodie", 200000, 10, "L", false),
+                new Clothing("CL003", "Hoodie", 200000, 10, "L", true),
                 new Clothing("CL004", "Hoodie", 200000, 10, "L", false),
 
 
@@ -35,8 +38,8 @@ namespace TokoOnline_New
                 new Food("FD003", "Nastar", 70000, 6, 7),
                 new Food("FD004", "Chicken", 65000, 6, 3),
                 new Food("FD005", "Dodol", 65000, 6, 0)
-
             };
+
 
             //simpan produk kereposit
             Repository<Product> repository = new Repository<Product>();
@@ -71,9 +74,13 @@ namespace TokoOnline_New
 
             if (buyer == null)
             {
-                buyer = new Buyer("B003", enteredName, false);
+                string newBuyerId =
+                    "B" + (registeredBuyers.Length + 1).ToString("D3");
+
+                buyer = new Buyer(newBuyerId, enteredName, false, 0);
 
                 Console.WriteLine("Welcome, " + buyer.Name);
+                Console.WriteLine("Buyer ID: " + buyer.BuyerId);
                 Console.WriteLine("Status: Regular Buyer");
             }
             else
@@ -111,7 +118,16 @@ namespace TokoOnline_New
             bool isRunning = true;
 
             Queue<Order> warehouseQueue = new Queue<Order>();
-            int orderNumber = 1;
+
+            List<Order> orderHistory = new List<Order>()
+            {
+                new Order("001", "Fatkhi", 315000),
+                new Order("002", "Ilham", 115000),
+                new Order("003", "Fatkhi", 240000),
+                new Order("005", "Rama", 300000),
+            };
+
+            int orderNumber = orderHistory.Count + 1;
 
             while (isRunning)
             {
@@ -123,6 +139,7 @@ namespace TokoOnline_New
                 Console.WriteLine("4. Checkout");
                 Console.WriteLine("5. Return");
                 Console.WriteLine("6. Process Warehouse Order");
+                Console.WriteLine("7. View Reports");
                 Console.WriteLine("7. Exit");
                 Console.Write("Choose menu: ");
 
@@ -310,6 +327,8 @@ namespace TokoOnline_New
                             );
 
                             warehouseQueue.Enqueue(order);
+                            orderHistory.Add(order);
+
                             orderNumber++;
 
                             Console.WriteLine("Order added to warehouse queue.");
@@ -448,11 +467,28 @@ namespace TokoOnline_New
                     }
                 }
                 else if (choice == "7")
+                { //pembeli dengan poin terbanyak
+                    Console.WriteLine();
+                    Console.WriteLine(" Top Buyer :");
+
+                    var topBuyer = registeredBuyers
+                        .OrderByDescending(b => b.Points)
+                        .FirstOrDefault();
+                    //.Take(3);  
+
+                    Console.WriteLine($"{topBuyer.Name} | Points: {topBuyer.Points}");
+                    //foreach (var buy in topBuyer)
+                    //{
+                    //    Console.WriteLine(
+                    //        $"{buy.Name} | Points: {buy.Points}"
+                    //    );
+                    //}
+                }
+                else if (choice == "8")
                 {
                     isRunning = false;
                     Console.WriteLine("Thank you for shopping!");
                 }
-
             }
         }
     }
