@@ -464,10 +464,9 @@ namespace TokoOnline_New
                     }
                     else
                     {
-                        Order order = warehouseQueue.Dequeue();
-
-                        Console.WriteLine("Processed Order:");
-                        order.PrintInfo();
+                        Asynchronous.WarehouseAsync(warehouseQueue)
+                            .GetAwaiter()
+                            .GetResult();
                     }
                 }
                 else if (choice == "7")
