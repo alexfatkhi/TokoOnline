@@ -1,67 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Text;
 using Project_OOP.AProduct;
+using TokoOnline_New.CException;
 
 namespace TokoOnline_New.BCart_Checkout
 {
     public class Cart
     {
+        // Batas jenis produk dalam keranjang.
+        public const int MaxItemTypes = 10;
+
         public Buyer Buyer { get; private set; }
-        private Product[] products = new Product[10];
-        private int[] quantities = new int[10];
-        private int itemCount = 0;
+
+        private readonly List<Product> products = new List<Product>();
+        private readonly List<int> quantities = new List<int>();
 
         public Cart(Buyer buyer)
         {
             Buyer = buyer;
         }
 
+        public int ItemCount => products.Count;
+        public bool IsEmpty => products.Count == 0;
 
-        public bool Add(Product product)
+        public void Add(Product product)
         {
-            return Add(product, 1);
+            Add(product, 1);
         }
 
-        public bool Add(Product product, int qty)
+        // Menambah produk ke keranjang eranjang.
+        // Menthrow:
+        // - ArgumentException        
+        // - ExpiredProductException  
+        // - OutOfStockException      
+        // - CartFullException        
+        public void Add(Product product, int qty)
         {
             if (product == null)
             {
-                Console.WriteLine("Product is invalid.");
-                return false;
+                throw new ArgumentException("Product is invalid.");
             }
 
             if (qty <= 0)
             {
-                Console.WriteLine("Quantity must be greater than 0.");
-                return false;
+                throw new ArgumentException("Quantity must be greater than 0.");
             }
 
-            if (product is Food)
+            // Makanan kedaluwarsa tidak boleh dibeli.
+            if (product is Food food && food.DaysUntilExpiry <= 0)
             {
-                Food food = (Food)product;
-
-                if (food.DaysUntilExpiry <= 0)
-                {
-                    Console.WriteLine("Product cannot be added because is expired.");
-                    return false;
-                }
+                throw new ExpiredProductException(
+                    $"'{product.Name}' is expired and cannot be purchased.");
             }
 
+            // Produk habis stok.
             if (product.Stock <= 0)
             {
-                Console.WriteLine("Product cannot be added because is out of stock.");
-                return false;
+                throw new OutOfStockException(
+                    $"'{product.Name}' is out of stock.");
             }
 
-            if (!product.CanBuy())
-            {
-                Console.WriteLine("Product cannot be purchased.");
-                return false;
-            }
-
-            for (int i = 0; i < itemCount; i++)
+            // Kalau produk sudah ada di keranjang, cukup tambah qty-nya.
+            for (int i = 0; i < products.Count; i++)
             {
                 if (products[i].Code == product.Code)
                 {
@@ -69,43 +69,42 @@ namespace TokoOnline_New.BCart_Checkout
 
                     if (newQuantity > product.Stock)
                     {
-                        Console.WriteLine(
-                            "Not enough stock. Available stock: "
-                            + (product.Stock - quantities[i]));
-                        return false;
+                        throw new OutOfStockException(
+                            $"Not enough stock for '{product.Name}'. Available: {product.Stock - quantities[i]}.");
                     }
 
                     quantities[i] = newQuantity;
-                    return true;
+                    return;
                 }
             }
 
-            if (itemCount >= products.Length)
+            // Produk baru butuh slot baru -> cek keranjang penuh dulu.
+            if (products.Count >= MaxItemTypes)
             {
-                Console.WriteLine("Cart is full. Maximum 10 product types.");
-                return false;
+                throw new CartFullException(
+                    $"Cart is full. Maximum {MaxItemTypes} product types allowed.");
             }
 
-            products[itemCount] = product;
-            quantities[itemCount] = qty;
-            itemCount++;
+            if (qty > product.Stock)
+            {
+                throw new OutOfStockException(
+                    $"Not enough stock for '{product.Name}'. Available: {product.Stock}.");
+            }
 
-            return true;
+            products.Add(product);
+            quantities.Add(qty);
         }
-
 
         public int CalculateTotal()
         {
             int total = 0;
-            
-            for (int i=0; i < itemCount; i++)
+
+            for (int i = 0; i < products.Count; i++)
             {
-                int subtotal = products[i].FinalPrice() * quantities[i];
-                total += subtotal;
+                total += products[i].FinalPrice() * quantities[i];
             }
 
             return total;
-
         }
 
         public int CalculateShipping()
@@ -118,45 +117,70 @@ namespace TokoOnline_New.BCart_Checkout
             }
 
             return 15000;
-
         }
 
-        public int Checkout()
+        // Checkout -> hasilkan Order (buat diantrikan ke gudang), lalu kosongkan keranjang.
+        // null kalau keranjang kosong.
+        public Order Checkout(string orderId, int discount)
         {
-            if (itemCount == 0)
+            if (products.Count == 0)
             {
-                return 0;
+                return null;
             }
 
-            for (int i = 0; i < itemCount; i++)
+            // Pastikan semua item masih bisa dibeli saat checkout.
+            for (int i = 0; i < products.Count; i++)
             {
                 if (!products[i].CanBuy())
                 {
-                    return 0;
+                    throw new OutOfStockException(
+                        $"'{products[i].Name}' is out of stock.");
                 }
 
                 if (quantities[i] > products[i].Stock)
                 {
-                    return 0;
+                    throw new OutOfStockException(
+                        $"Not enough stock for '{products[i].Name}'. Available: {products[i].Stock}.");
                 }
             }
 
             int subtotal = CalculateTotal();
             int shipping = CalculateShipping();
-            int totalPayment = subtotal + shipping;
 
-            for (int i = 0; i < itemCount; i++)
+            if (discount < 0)
+            {
+                discount = 0;
+            }
+
+            if (discount > subtotal)
+            {
+                discount = subtotal;
+            }
+
+            // Snapshot item untuk disimpan di Order sebelum keranjang dikosongkan.
+            List<Product> orderedProducts = new List<Product>(products);
+            List<int> orderedQuantities = new List<int>(quantities);
+
+            for (int i = 0; i < products.Count; i++)
             {
                 products[i].ReduceStock(quantities[i]);
             }
 
             Buyer.AddPoints(subtotal);
 
-            products = new Product[10];
-            quantities = new int[10];
-            itemCount = 0;
+            Order order = new Order(
+                orderId,
+                Buyer.Name,
+                orderedProducts,
+                orderedQuantities,
+                subtotal,
+                shipping,
+                discount);
 
-            return totalPayment;
+            products.Clear();
+            quantities.Clear();
+
+            return order;
         }
 
         public void PrintItems()
@@ -164,32 +188,25 @@ namespace TokoOnline_New.BCart_Checkout
             Console.WriteLine();
             Console.WriteLine("=== CART ITEMS ===");
 
-            if (itemCount == 0)
+            if (products.Count == 0)
             {
                 Console.WriteLine("Cart is empty.");
                 return;
             }
 
-            for (int i = 0; i < itemCount; i++)
+            for (int i = 0; i < products.Count; i++)
             {
-                int subtotal =
-                    products[i].FinalPrice() * quantities[i];
+                int subtotal = products[i].FinalPrice() * quantities[i];
 
                 Console.WriteLine(
                     products[i].Name
                     + " | Quantity: " + quantities[i]
-                    + " | Price: Rp"
-                    + products[i].FinalPrice().ToString("N0")
-                    + " | Subtotal: Rp"
-                    + subtotal.ToString("N0"));
+                    + " | Price: Rp" + products[i].FinalPrice().ToString("N0")
+                    + " | Subtotal: Rp" + subtotal.ToString("N0"));
             }
 
-            Console.WriteLine(
-                "Total: Rp" + CalculateTotal().ToString("N0"));
-
-            Console.WriteLine(
-                "Shipping: Rp" +
-                CalculateShipping().ToString("N0"));
+            Console.WriteLine("Total: Rp" + CalculateTotal().ToString("N0"));
+            Console.WriteLine("Shipping: Rp" + CalculateShipping().ToString("N0"));
         }
     }
 }

@@ -25,16 +25,11 @@ namespace Project_OOP.AProduct
             return base.CanBuy() && DaysUntilExpiry > 0;
         }
 
-        public override void Info()
+        public override string GetNote()
         {
-            string note = DaysUntilExpiry > 0
+            return DaysUntilExpiry > 0
                 ? $"Expires in {DaysUntilExpiry} days"
                 : "EXPIRED";
-
-            Console.WriteLine(
-                $"{Code,-6} {Name,-12} {GetType().Name,-11} " +
-                $"Normal:Rp{Price,-8:N0} Final:Rp{FinalPrice(),-8:N0} Stock:{Stock}  {note}"
-            );
         }
     }
 }

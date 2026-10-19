@@ -7,6 +7,7 @@ namespace TokoOnline_New.BCart_Checkout
         public string Name { get; set; }
         public bool Member { get; set; }
         public int Points { get; private set; }
+        
 
         public Buyer(string buyerId, string name, bool member)
         {

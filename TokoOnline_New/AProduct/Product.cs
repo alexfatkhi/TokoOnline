@@ -80,11 +80,19 @@ namespace Project_OOP.AProduct
             return Stock > 0;
         }
 
+        // Catatan khusus tiap jenis produk (garansi/promo/kedaluwarsa).
+        // Dioverride child; default tidak ada catatan.
+        public virtual string GetNote()
+        {
+            return "-";
+        }
+
+        // Satu baris tabel katalog. Header-nya dicetak oleh Store.PrintCatalog().
         public virtual void Info()
         {
             Console.WriteLine(
-                $"{Code,-6} {Name,-12} {GetType().Name,-11} " +
-                $"Normal:Rp{Price,-8:N0} Final:Rp{FinalPrice(),-8:N0} Stock:{Stock}"
+                $"{Code,-6} | {Name,-13} | {GetType().Name,-11} | " +
+                $"Rp{Price,-10:N0} | Rp{FinalPrice(),-10:N0} | {Stock,-6} | {GetNote()}"
             );
         }
     }

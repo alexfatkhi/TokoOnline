@@ -31,15 +31,9 @@ namespace Project_OOP.AProduct
             return days >= 0 && days <= ReturnDayLimit;
         }
 
-        public override void Info()
+        public override string GetNote()
         {
-            string note = WithWarranty ? "Warranty (+5%)" : "No warranty";
-
-            Console.WriteLine(
-                $"{Code,-6} {Name,-12} {GetType().Name,-11} " +
-                $"Normal:Rp{Price,-8:N0} Final:Rp{FinalPrice(),-8:N0} Stock:{Stock}  " +
-                $"{note}"
-            );
+            return WithWarranty ? "Warranty (+5%)" : "No warranty";
         }
     }
 }
