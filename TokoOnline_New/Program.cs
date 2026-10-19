@@ -139,8 +139,12 @@ namespace TokoOnline_New
                 Console.WriteLine("4. Checkout");
                 Console.WriteLine("5. Return");
                 Console.WriteLine("6. Process Warehouse Order");
-                Console.WriteLine("7. View Reports");
-                Console.WriteLine("7. Exit");
+                Console.WriteLine("7. Top Buyer");
+                Console.WriteLine("8. Products on Promo");
+                Console.WriteLine("9. Best Selling Products");
+                Console.WriteLine("10. Selling Products Total");
+                Console.WriteLine("11. Product on low Stock");
+                Console.WriteLine("12. Exit");
                 Console.Write("Choose menu: ");
 
                 string choice = Console.ReadLine() ?? "";
@@ -485,6 +489,30 @@ namespace TokoOnline_New
                     //}
                 }
                 else if (choice == "8")
+                {
+                    List<Product> prod = repository.GetAll();
+
+                    var promoProducts = prod
+                        .Where(p => p.FinalPrice() < p.Price)
+                        .OrderBy(p => p.FinalPrice())
+                        .ToList();
+                    Console.WriteLine("Products on promo : ");
+                    foreach (var promo in promoProducts)
+                    {
+                        Console.WriteLine(
+                        $"{promo.Code} | {promo.Name} | Normal Price: Rp. {promo.Price} | Promo Price: Rp. {promo.FinalPrice()} | Stock: {promo.Stock}"
+                    );
+                    }
+                }
+                else if (choice == "9")
+                {
+                    //List<Product> prod = repository.GetAll();
+
+                    //var orders = orderHistory;
+                    //var Join = 
+                    
+                }
+                else if (choice == "12")
                 {
                     isRunning = false;
                     Console.WriteLine("Thank you for shopping!");
