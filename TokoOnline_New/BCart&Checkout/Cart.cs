@@ -116,7 +116,7 @@ namespace TokoOnline_New.BCart_Checkout
 
         }
 
-        public int Checkout()
+        public async Task<int> Checkout()
         {
             if (itemCount == 0)
             {
@@ -144,6 +144,19 @@ namespace TokoOnline_New.BCart_Checkout
             {
                 products[i].ReduceStock(quantities[i]);
             }
+            bool paymentSuccess = await ProcessPayment();
+
+            if (paymentSuccess == false)
+            {
+                // balikin stock
+                for (int i = 0; i < itemCount; i++)
+                {
+                    products[i].AddStock(quantities[i]);
+                }
+
+                Console.WriteLine("Checkout cancelled. Stock restored.");
+                return 0;
+            }
 
             Buyer.AddPoints(subtotal);
 
@@ -152,6 +165,33 @@ namespace TokoOnline_New.BCart_Checkout
             itemCount = 0;
 
             return totalPayment;
+        }
+
+        public async Task<bool> ProcessPayment ()
+        {
+            CancellationTokenSource cts = new CancellationTokenSource();
+
+            cts.CancelAfter(5000); //batas bayar 5 detik
+
+            try
+            {
+                Console.WriteLine("Processing Payment...");
+
+                await Task.Delay(7000, cts.Token); //simulasi aja
+
+                Console.WriteLine("Payment Successfull!");
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Payment Timeout!");
+                return false;
+            }
+            finally
+            {
+                cts.Dispose();
+            }
+
         }
 
         public void PrintItems()

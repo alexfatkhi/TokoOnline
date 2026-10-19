@@ -280,11 +280,11 @@ namespace TokoOnline_New
                         int subtotal = cart.CalculateTotal();
                         int shippingCost = cart.CalculateShipping();
 
-                        int totalPayment = cart.Checkout();
+                        int totalPayment = cart.Checkout().Result;
 
                         if (totalPayment == 0)
                         {
-                            Console.WriteLine("Checkout failed or cart is empty.");
+                            Console.WriteLine("Checkout failed");
                         }
                         else
                         {
