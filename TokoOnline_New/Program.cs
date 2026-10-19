@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Threading.Tasks;
 using Project_OOP.AProduct;
 using TokoOnline_New.BCart_Checkout;
 using TokoOnline_New.CException;
@@ -8,7 +9,7 @@ namespace TokoOnline_New
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Buyer[] registeredBuyers = new Buyer[]
             {
@@ -366,31 +367,13 @@ namespace TokoOnline_New
                 else if (choice == "6")
                 {
                     Console.WriteLine();
-                    Console.WriteLine("=== WAREHOUSE QUEUE ===");
+                    Console.WriteLine("=== WAREHOUSE QUEUE (ASYNC) ===");
                     Console.WriteLine("Pending orders: " + warehouse.PendingCount);
+                    Console.WriteLine();
 
-                    Order processed = warehouse.ProcessNext();
-
-                    if (processed == null)
-                    {
-                        Console.WriteLine("No orders to process.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Processing " + processed.OrderId
-                            + " for " + processed.BuyerName + ":");
-
-                        for (int i = 0; i < processed.Products.Count; i++)
-                        {
-                            Console.WriteLine("  - " + processed.Products[i].Name
-                                + " x" + processed.Quantities[i]);
-                        }
-
-                        Console.WriteLine(
-                            "Total Payment: Rp" + processed.TotalPayment.ToString("N0"));
-                        Console.WriteLine("Order shipped from warehouse.");
-                        Console.WriteLine("Remaining in queue: " + warehouse.PendingCount);
-                    }
+                    // Proses antrian satu per satu secara async
+                    // (verifikasi pembayaran -> pengemasan -> pengiriman).
+                    await warehouse.ProcessAllAsync();
                 }
                 else if (choice == "7")
                 {
